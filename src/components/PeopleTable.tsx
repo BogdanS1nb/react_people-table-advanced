@@ -5,12 +5,16 @@ import { PersonLink } from './PersonLink';
 type Props = {
   people: Person[];
   selectedSlug: string | null;
+  sort: string | null;
+  order: string | null;
   onSort: (param: string) => void;
 };
 
 export const PeopleTable: React.FC<Props> = ({
   people,
   selectedSlug,
+  sort,
+  order,
   onSort,
 }) => (
   <div className="block">
@@ -25,10 +29,19 @@ export const PeopleTable: React.FC<Props> = ({
             className="table is-striped is-hoverable is-narrow is-fullwidth"
           >
             <thead>
-              <th onClick={() => onSort('name')}>Name</th>
-              <th onClick={() => onSort('sex')}>Sex</th>
-              <th onClick={() => onSort('born')}>Born</th>
-              <th onClick={() => onSort('died')}>Died</th> <th>Mother</th>
+              <th onClick={() => onSort('name')}>
+                Name {sort === 'name' && (order === 'desc' ? '▼' : '▲')}
+              </th>
+              <th onClick={() => onSort('sex')}>
+                Sex {sort === 'sex' && (order === 'desc' ? '▼' : '▲')}
+              </th>
+              <th onClick={() => onSort('born')}>
+                Born {sort === 'born' && (order === 'desc' ? '▼' : '▲')}
+              </th>
+              <th onClick={() => onSort('died')}>
+                Died {sort === 'died' && (order === 'desc' ? '▼' : '▲')}
+              </th>{' '}
+              <th>Mother</th>
               <th>Father</th>
             </thead>
 

@@ -9,10 +9,10 @@ export const PeoplePage = () => {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [sortParam, setSortParam] = useState<string>('');
-  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [searchParams] = useSearchParams();
+  const sort = searchParams.get('sort'); // 'name' | 'sex' | 'born' | 'died'
+  const order = searchParams.get('order'); // 'desc' | null (asc by default)
 
   const { slug } = useParams();
 
@@ -50,19 +50,28 @@ export const PeoplePage = () => {
     return matchesQuery && matchesSex && matchesCentury;
   });
 
-  const handleSort = (param: string) => {
-    if (sortParam === param) {
-      // якщо ще раз клікнув по тій же колонці → міняємо порядок
-      setOrder(order === 'asc' ? 'desc' : 'asc');
-    } else {
-      // нова колонка → ставимо asc за замовчуванням
-      setSortParam(param);
-      setOrder('asc');
+  const handleSort = (field: string) => {
+    const currentSort = searchParams.get('sort');
+    const currentOrder = searchParams.get('order');
+
+    if (currentSort !== field) {
+      // нова колонка → встановлюємо asc
+      searchParams.set('sort', field);
+      searchParams.delete('order'); // asc by default
+    } else if (!currentOrder) {
+      // було asc → робимо desc
+      searchParams.set('order', 'desc');
+    } else if (currentOrder === 'desc') {
+      // було desc → прибираємо сортування
+      searchParams.delete('sort');
+      searchParams.delete('order');
     }
+
+    setSearchParams(searchParams);
   };
 
   const sortedPeople = [...visiblePeople].sort((a, b) => {
-    switch (sortParam) {
+    switch (sort) {
       case 'name':
         return order === 'desc'
           ? b.name.localeCompare(a.name)
@@ -98,6 +107,8 @@ export const PeoplePage = () => {
           people={sortedPeople}
           selectedSlug={slug}
           onSort={handleSort}
+          sort={sort}
+          order={order}
         />
       )}
     </div>
