@@ -9,6 +9,8 @@ export const PeoplePage = () => {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [sortParam, setSortParam] = useState<string>('');
+  const [order, setOrder] = useState<'asc' | 'desc'>('asc');
 
   const [searchParams] = useSearchParams();
 
@@ -30,7 +32,12 @@ export const PeoplePage = () => {
 
   const visiblePeople = people.filter(p => {
     // name filter
-    const matchesQuery = !query || p.name.toLowerCase().includes(query);
+    const normalized = query.toLowerCase();
+    const matchesQuery =
+      !query ||
+      p.name.toLowerCase().includes(normalized) ||
+      p.motherName?.toLowerCase().includes(normalized) ||
+      p.fatherName?.toLowerCase().includes(normalized);
 
     // sex filter
     const matchesSex = !sex || p.sex === sex;
@@ -41,6 +48,36 @@ export const PeoplePage = () => {
       centuries.includes(String(Math.ceil(p.born / 100)));
 
     return matchesQuery && matchesSex && matchesCentury;
+  });
+
+  const handleSort = (param: string) => {
+    if (sortParam === param) {
+      // якщо ще раз клікнув по тій же колонці → міняємо порядок
+      setOrder(order === 'asc' ? 'desc' : 'asc');
+    } else {
+      // нова колонка → ставимо asc за замовчуванням
+      setSortParam(param);
+      setOrder('asc');
+    }
+  };
+
+  const sortedPeople = [...visiblePeople].sort((a, b) => {
+    switch (sortParam) {
+      case 'name':
+        return order === 'desc'
+          ? b.name.localeCompare(a.name)
+          : a.name.localeCompare(b.name);
+      case 'sex':
+        return order === 'desc'
+          ? b.sex.localeCompare(a.sex)
+          : a.sex.localeCompare(b.sex);
+      case 'born':
+        return order === 'desc' ? b.born - a.born : a.born - b.born;
+      case 'died':
+        return order === 'desc' ? b.died - a.died : a.died - b.died;
+      default:
+        return 0;
+    }
   });
 
   return (
@@ -57,7 +94,11 @@ export const PeoplePage = () => {
         <p data-cy="noPeopleMessage">There are no people on the server</p>
       )}
       {!loading && !error && people.length > 0 && (
-        <PeopleTable people={visiblePeople} selectedSlug={slug} />
+        <PeopleTable
+          people={sortedPeople}
+          selectedSlug={slug}
+          onSort={handleSort}
+        />
       )}
     </div>
   );
